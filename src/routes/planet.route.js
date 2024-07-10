@@ -1,0 +1,58 @@
+const { Router } = require('express');
+const { header, param } = require('express-validator');
+const {
+  create,
+  findAll,
+  findOne,
+  update,
+  remove,
+} = require('../controllers/planet.controller');
+
+const { protected, adminAccess, apiKeyAccess } = require('../middlewares/auth');
+
+const upload = require('../middlewares/file-upload');
+
+const router = new Router();
+
+router.post('/', [protected, adminAccess, upload.single('image')], create);
+router.get(
+  '/',
+  [
+    header('apikey')
+      .exists()
+      .withMessage('apikey header is required')
+      .isString()
+      .withMessage('apikey header must be a string')
+      .notEmpty()
+      .withMessage('apikey header cannot be empty'),
+    apiKeyAccess,
+  ],
+  findAll
+);
+router.get(
+  '/:id',
+  [
+    param('id', 'Invalid MongoDB ID').isMongoId(),
+    header('apikey')
+      .exists()
+      .withMessage('apikey header is required')
+      .isString()
+      .withMessage('apikey header must be a string')
+      .notEmpty()
+      .withMessage('apikey header cannot be empty'),
+    apiKeyAccess,
+  ],
+  findOne
+);
+router.put(
+  '/:id',
+  [param('id', 'Invalid MongoDB ID').isMongoId(), protected, adminAccess],
+  update
+);
+router.delete(
+  '/:id',
+  [param('id', 'Invalid MongoDB ID').isMongoId(), protected, adminAccess],
+  remove
+);
+
+module.exports = router;
